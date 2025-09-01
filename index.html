@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Code IDE</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="ide-container">
+        <!-- Header -->
+        <header class="ide-header">
+            <div class="header-left">
+                <h1 class="logo">🚀 Vibe Code IDE</h1>
+                <span class="tagline">Creative coding in the flow</span>
+            </div>
+            <div class="header-right">
+                <div class="ai-tools">
+                    <a href="https://lovable.dev" target="_blank" class="ai-link lovable">
+                        <span class="ai-icon">🤖</span>
+                        Lovable.dev
+                    </a>
+                    <a href="https://bolt.new" target="_blank" class="ai-link bolt">
+                        <span class="ai-icon">⚡</span>
+                        Bolt.new
+                    </a>
+                </div>
+                <button class="run-btn" id="runBtn">▶ Run</button>
+            </div>
+        </header>
+
+        <!-- Main IDE Area -->
+        <main class="ide-main">
+            <!-- Code Panels -->
+            <div class="code-panels">
+                <!-- HTML Panel -->
+                <div class="code-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">HTML</span>
+                        <div class="panel-actions">
+                            <button class="panel-btn" onclick="clearPanel('html')">Clear</button>
+                        </div>
+                    </div>
+                    <textarea id="htmlCode" class="code-editor" placeholder="<!-- Write your HTML here -->">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Vibe Project</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Vibe Coding! ✨</h1>
+        <p>Start creating something amazing...</p>
+        <button onclick="vibeAlert()">Click for Good Vibes</button>
+    </div>
+</body>
+</html></textarea>
+                </div>
+
+                <!-- CSS Panel -->
+                <div class="code-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">CSS</span>
+                        <div class="panel-actions">
+                            <button class="panel-btn" onclick="clearPanel('css')">Clear</button>
+                        </div>
+                    </div>
+                    <textarea id="cssCode" class="code-editor" placeholder="/* Write your CSS here */">
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+}
+
+h1 {
+    background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+p {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+button {
+    background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}</textarea>
+                </div>
+
+                <!-- JavaScript Panel -->
+                <div class="code-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">JavaScript</span>
+                        <div class="panel-actions">
+                            <button class="panel-btn" onclick="clearPanel('js')">Clear</button>
+                        </div>
+                    </div>
+                    <textarea id="jsCode" class="code-editor" placeholder="// Write your JavaScript here">
+function vibeAlert() {
+    const messages = [
+        "You're coding with great vibes! 🌟",
+        "Keep that creative energy flowing! ⚡",
+        "Your code is looking fantastic! 🚀",
+        "Vibe coding at its finest! ✨",
+        "You're in the zone! 🎯"
+    ];
+    
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    alert(randomMessage);
+}
+
+// Add some interactive elements
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Vibe Code IDE loaded successfully!');
+    console.log('Ready to create something amazing!');
+});</textarea>
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <span class="panel-title">Live Preview</span>
+                    <div class="panel-actions">
+                        <button class="panel-btn" onclick="refreshPreview()">Refresh</button>
+                        <button class="panel-btn" onclick="openInNewTab()">Open in New Tab</button>
+                    </div>
+                </div>
+                <iframe id="preview" class="preview-frame"></iframe>
+            </div>
+        </main>
+    </div>
+
+    <script src="scripts/main.js"></script>
+</body>
+</html>
