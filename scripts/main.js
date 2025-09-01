@@ -121,11 +121,11 @@ class VibeCodeIDE {
         
         // Add visual feedback
         this.runBtn.textContent = '✓ Updated';
-        this.runBtn.style.background = 'linear-gradient(45deg, #4ade80, #22c55e)';
+        this.runBtn.style.background = 'linear-gradient(45deg, #22c55e, #16a34a)';
         
         setTimeout(() => {
             this.runBtn.textContent = '▶ Run';
-            this.runBtn.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
+            this.runBtn.style.background = 'linear-gradient(45deg, #6366f1, #7c3aed)';
         }, 1000);
     }
     
@@ -164,7 +164,7 @@ class VibeCodeIDE {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${type === 'success' ? '#4ade80' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            background: ${type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#3b82f6'};
             color: white;
             padding: 12px 20px;
             border-radius: 8px;
@@ -180,6 +180,22 @@ class VibeCodeIDE {
             notification.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+}
+
+// Panel collapse/expand functionality
+function togglePanel(panelId) {
+    const panel = document.getElementById(panelId);
+    const collapseIcon = panel.querySelector('.collapse-icon');
+    
+    if (panel.classList.contains('collapsed')) {
+        // Expand panel
+        panel.classList.remove('collapsed');
+        collapseIcon.textContent = '▼';
+    } else {
+        // Collapse panel
+        panel.classList.add('collapsed');
+        collapseIcon.textContent = '▶';
     }
 }
 
