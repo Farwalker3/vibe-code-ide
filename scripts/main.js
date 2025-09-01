@@ -2,9 +2,7 @@
 
 class VibeCodeIDE {
     constructor() {
-        this.htmlEditor = document.getElementById('htmlCode');
-        this.cssEditor = document.getElementById('cssCode');
-        this.jsEditor = document.getElementById('jsCode');
+        this.editors = {};
         this.preview = document.getElementById('preview');
         this.runBtn = document.getElementById('runBtn');
         
@@ -12,15 +10,25 @@ class VibeCodeIDE {
     }
     
     init() {
-        // Auto-run on load
-        this.updatePreview();
-        
-        // Add event listeners
-        this.addEventListeners();
-        
-        // Welcome message
-        console.log('🚀 Welcome to Vibe Code IDE!');
-        console.log('Start coding and let the creative vibes flow! ✨');
+        // Initialize after DOM is fully loaded and other components are ready
+        setTimeout(() => {
+            this.setupEditors();
+            this.addEventListeners();
+            this.updatePreview();
+            
+            // Welcome message
+            console.log('🚀 Welcome to Vibe Code IDE!');
+            console.log('Start coding and let the creative vibes flow! ✨');
+        }, 200);
+    }
+
+    setupEditors() {
+        // Find all code editors and set them up
+        const editorElements = document.querySelectorAll('.code-editor');
+        editorElements.forEach(editor => {
+            const editorId = editor.id;
+            this.editors[editorId] = editor;
+        });
     }
     
     addEventListeners() {
@@ -31,12 +39,15 @@ class VibeCodeIDE {
             updateTimeout = setTimeout(() => this.updatePreview(), 500);
         };
         
-        this.htmlEditor.addEventListener('input', debouncedUpdate);
-        this.cssEditor.addEventListener('input', debouncedUpdate);
-        this.jsEditor.addEventListener('input', debouncedUpdate);
-        
+        // Add event listeners to all current editors
+        Object.values(this.editors).forEach(editor => {
+            editor.addEventListener('input', debouncedUpdate);
+        });
+
         // Manual run button
-        this.runBtn.addEventListener('click', () => this.updatePreview());
+        if (this.runBtn) {
+            this.runBtn.addEventListener('click', () => this.updatePreview());
+        }
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -49,12 +60,16 @@ class VibeCodeIDE {
             // Ctrl/Cmd + S to save (placeholder)
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
-                this.saveProject();
+                if (window.projectManager) {
+                    window.projectManager.saveProject();
+                } else {
+                    this.saveProject();
+                }
             }
         });
         
         // Tab key support in textareas
-        [this.htmlEditor, this.cssEditor, this.jsEditor].forEach(editor => {
+        Object.values(this.editors).forEach(editor => {
             editor.addEventListener('keydown', (e) => {
                 if (e.key === 'Tab') {
                     e.preventDefault();
@@ -68,11 +83,27 @@ class VibeCodeIDE {
             });
         });
     }
+
+    // Method to refresh editors when project type changes
+    refreshEditors() {
+        this.setupEditors();
+        this.addEventListeners();
+        this.updatePreview();
+    }
     
     updatePreview() {
-        const html = this.htmlEditor.value;
-        const css = this.cssEditor.value;
-        const js = this.jsEditor.value;
+        const htmlEditor = document.getElementById('htmlCode');
+        const cssEditor = document.getElementById('cssCode');
+        const jsEditor = document.getElementById('jsCode');
+        
+        if (!htmlEditor && !cssEditor && !jsEditor) {
+            console.log('No editors found for preview update');
+            return;
+        }
+
+        const html = htmlEditor ? htmlEditor.value : '';
+        const css = cssEditor ? cssEditor.value : '';
+        const js = jsEditor ? jsEditor.value : '';
         
         // Create the complete HTML document
         const previewContent = `
@@ -97,14 +128,20 @@ class VibeCodeIDE {
                     // Error handling for user code
                     window.addEventListener('error', function(e) {
                         console.error('Preview Error:', e.error);
-                        document.body.innerHTML += '<div style="background: #fee; border: 1px solid #fcc; padding: 10px; margin: 10px 0; border-radius: 4px; color: #c33;"><strong>JavaScript Error:</strong> ' + e.message + '</div>';
+                        const errorDiv = document.createElement('div');
+                        errorDiv.style.cssText = 'background: #fee; border: 1px solid #fcc; padding: 10px; margin: 10px 0; border-radius: 4px; color: #c33; font-family: monospace;';
+                        errorDiv.innerHTML = '<strong>JavaScript Error:</strong> ' + e.message;
+                        document.body.appendChild(errorDiv);
                     });
                     
                     try {
                         ${js}
                     } catch (error) {
                         console.error('JavaScript Error:', error);
-                        document.body.innerHTML += '<div style="background: #fee; border: 1px solid #fcc; padding: 10px; margin: 10px 0; border-radius: 4px; color: #c33;"><strong>JavaScript Error:</strong> ' + error.message + '</div>';
+                        const errorDiv = document.createElement('div');
+                        errorDiv.style.cssText = 'background: #fee; border: 1px solid #fcc; padding: 10px; margin: 10px 0; border-radius: 4px; color: #c33; font-family: monospace;';
+                        errorDiv.innerHTML = '<strong>JavaScript Error:</strong> ' + error.message;
+                        document.body.appendChild(errorDiv);
                     }
                 </script>
             </body>
@@ -112,28 +149,32 @@ class VibeCodeIDE {
         `;
         
         // Update preview iframe
-        const blob = new Blob([previewContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        this.preview.src = url;
-        
-        // Clean up previous blob URL
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        if (this.preview) {
+            const blob = new Blob([previewContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            this.preview.src = url;
+            
+            // Clean up previous blob URL
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
         
         // Add visual feedback
-        this.runBtn.textContent = '✓ Updated';
-        this.runBtn.style.background = 'linear-gradient(45deg, #22c55e, #16a34a)';
-        
-        setTimeout(() => {
-            this.runBtn.textContent = '▶ Run';
-            this.runBtn.style.background = 'linear-gradient(45deg, #6366f1, #7c3aed)';
-        }, 1000);
+        if (this.runBtn) {
+            this.runBtn.textContent = '✓ Updated';
+            this.runBtn.style.background = 'linear-gradient(45deg, #22c55e, #16a34a)';
+            
+            setTimeout(() => {
+                this.runBtn.textContent = '▶ Run';
+                this.runBtn.style.background = 'linear-gradient(45deg, #6366f1, #7c3aed)';
+            }, 1000);
+        }
     }
     
     saveProject() {
         const projectData = {
-            html: this.htmlEditor.value,
-            css: this.cssEditor.value,
-            js: this.jsEditor.value,
+            html: this.getEditorValue('htmlCode'),
+            css: this.getEditorValue('cssCode'),
+            js: this.getEditorValue('jsCode'),
             timestamp: new Date().toISOString()
         };
         
@@ -143,14 +184,25 @@ class VibeCodeIDE {
         // Show save confirmation
         this.showNotification('Project saved locally! 💾', 'success');
     }
+
+    getEditorValue(editorId) {
+        const editor = document.getElementById(editorId);
+        return editor ? editor.value : '';
+    }
     
     loadProject() {
         const saved = localStorage.getItem('vibeCodeProject');
         if (saved) {
             const projectData = JSON.parse(saved);
-            this.htmlEditor.value = projectData.html || '';
-            this.cssEditor.value = projectData.css || '';
-            this.jsEditor.value = projectData.js || '';
+            
+            const htmlEditor = document.getElementById('htmlCode');
+            const cssEditor = document.getElementById('cssCode');
+            const jsEditor = document.getElementById('jsCode');
+            
+            if (htmlEditor) htmlEditor.value = projectData.html || '';
+            if (cssEditor) cssEditor.value = projectData.css || '';
+            if (jsEditor) jsEditor.value = projectData.js || '';
+            
             this.updatePreview();
             this.showNotification('Project loaded! 📂', 'success');
         }
@@ -183,44 +235,74 @@ class VibeCodeIDE {
     }
 }
 
-// Panel collapse/expand functionality
+// Panel collapse/expand functionality - FIXED to remove extra space
 function togglePanel(panelId) {
     const panel = document.getElementById(panelId);
+    if (!panel) return;
+    
     const collapseIcon = panel.querySelector('.collapse-icon');
+    const codeEditor = panel.querySelector('.code-editor');
     
     if (panel.classList.contains('collapsed')) {
         // Expand panel
         panel.classList.remove('collapsed');
-        collapseIcon.textContent = '▼';
+        if (collapseIcon) collapseIcon.textContent = '▼';
+        
+        // Restore editor visibility and functionality
+        if (codeEditor) {
+            codeEditor.style.height = '';
+            codeEditor.style.minHeight = '';
+            codeEditor.style.padding = '';
+            codeEditor.style.margin = '';
+            codeEditor.style.opacity = '';
+            codeEditor.style.visibility = '';
+            codeEditor.style.overflow = '';
+        }
     } else {
         // Collapse panel
         panel.classList.add('collapsed');
-        collapseIcon.textContent = '▶';
+        if (collapseIcon) collapseIcon.textContent = '▶';
+        
+        // Hide editor completely to remove space
+        if (codeEditor) {
+            codeEditor.style.height = '0';
+            codeEditor.style.minHeight = '0';
+            codeEditor.style.padding = '0';
+            codeEditor.style.margin = '0';
+            codeEditor.style.opacity = '0';
+            codeEditor.style.visibility = 'hidden';
+            codeEditor.style.overflow = 'hidden';
+        }
     }
 }
 
 // Global functions for UI interactions
 function clearPanel(type) {
-    const editors = {
-        html: document.getElementById('htmlCode'),
-        css: document.getElementById('cssCode'),
-        js: document.getElementById('jsCode')
-    };
+    const editorId = type + 'Code';
+    const editor = document.getElementById(editorId);
     
-    if (editors[type]) {
-        editors[type].value = '';
-        ide.updatePreview();
+    if (editor) {
+        editor.value = '';
+        if (window.ide) {
+            window.ide.updatePreview();
+        }
     }
 }
 
 function refreshPreview() {
-    ide.updatePreview();
+    if (window.ide) {
+        window.ide.updatePreview();
+    }
 }
 
 function openInNewTab() {
-    const html = document.getElementById('htmlCode').value;
-    const css = document.getElementById('cssCode').value;
-    const js = document.getElementById('jsCode').value;
+    const htmlEditor = document.getElementById('htmlCode');
+    const cssEditor = document.getElementById('cssCode');
+    const jsEditor = document.getElementById('jsCode');
+    
+    const html = htmlEditor ? htmlEditor.value : '';
+    const css = cssEditor ? cssEditor.value : '';
+    const js = jsEditor ? jsEditor.value : '';
     
     const fullHTML = `
         <!DOCTYPE html>
@@ -241,6 +323,9 @@ function openInNewTab() {
     const blob = new Blob([fullHTML], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
+    
+    // Clean up
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // Add CSS animations
@@ -255,22 +340,45 @@ style.textContent = `
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
     }
+
+    /* Enhanced syntax highlighting styles */
+    .keyword {
+        color: #ff79c6;
+        font-weight: bold;
+    }
+    
+    .string {
+        color: #f1fa8c;
+    }
+    
+    .comment {
+        color: #6272a4;
+        font-style: italic;
+    }
+    
+    .number {
+        color: #bd93f9;
+    }
 `;
 document.head.appendChild(style);
 
 // Initialize the IDE when DOM is loaded
 let ide;
 document.addEventListener('DOMContentLoaded', () => {
-    ide = new VibeCodeIDE();
-    
-    // Try to load saved project
-    if (localStorage.getItem('vibeCodeProject')) {
-        setTimeout(() => {
-            if (confirm('Found a saved project. Would you like to load it?')) {
-                ide.loadProject();
-            }
-        }, 1000);
-    }
+    // Wait for other components to initialize first
+    setTimeout(() => {
+        ide = new VibeCodeIDE();
+        window.ide = ide; // Make it globally accessible
+        
+        // Try to load saved project
+        if (localStorage.getItem('vibeCodeProject') && !window.projectManager) {
+            setTimeout(() => {
+                if (confirm('Found a saved project. Would you like to load it?')) {
+                    ide.loadProject();
+                }
+            }, 1000);
+        }
+    }, 300);
 });
 
 // Export for potential use in other scripts
