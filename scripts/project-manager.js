@@ -263,7 +263,7 @@ if __name__ == "__main__":
         // Initialize IDE after panels are created
         setTimeout(() => {
             if (window.ide) {
-                window.ide.init();
+                window.ide.refreshEditors();
             }
         }, 100);
     }
@@ -440,6 +440,102 @@ if __name__ == "__main__":
         this.showNotification('Project downloaded! ⬇️', 'success');
     }
 
+    // NEW: Download project as ZIP
+    async downloadProjectAsZip() {
+        try {
+            // Collect current code from all editors
+            const projectType = this.projectTypes[this.currentProject.type];
+            const files = {};
+            
+            Object.keys(projectType.files).forEach(key => {
+                const editor = document.getElementById(`${key}Code`);
+                if (editor && editor.value.trim()) {
+                    // Map editor keys to actual file names
+                    const fileName = this.getFileName(key);
+                    files[fileName] = editor.value;
+                }
+            });
+
+            if (Object.keys(files).length === 0) {
+                this.showNotification('No files to download', 'error');
+                return;
+            }
+
+            // Create ZIP using JSZip (we'll need to include this library)
+            if (typeof JSZip === 'undefined') {
+                // Fallback: create individual files if JSZip is not available
+                this.downloadIndividualFiles(files);
+                return;
+            }
+
+            const zip = new JSZip();
+            
+            // Add files to ZIP
+            Object.entries(files).forEach(([fileName, content]) => {
+                zip.file(fileName, content);
+            });
+
+            // Add a README file
+            const readmeContent = `# ${this.currentProject.name}
+
+${this.currentProject.description || 'A project created with Vibe Code IDE'}
+
+## Files
+${Object.keys(files).map(file => `- ${file}`).join('\n')}
+
+## Created with
+Vibe Code IDE - Creative coding in the flow
+https://farwalker3.github.io/vibe-code-ide/
+
+Generated on: ${new Date().toLocaleString()}
+`;
+            zip.file('README.md', readmeContent);
+
+            // Generate ZIP and download
+            const content = await zip.generateAsync({type: 'blob'});
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${this.currentProject.name.replace(/[^a-z0-9]/gi, '_')}.zip`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+            this.showNotification('ZIP downloaded! 📦', 'success');
+
+        } catch (error) {
+            console.error('Error creating ZIP:', error);
+            this.showNotification('Error creating ZIP file', 'error');
+        }
+    }
+
+    downloadIndividualFiles(files) {
+        // Fallback method: download files individually
+        Object.entries(files).forEach(([fileName, content], index) => {
+            setTimeout(() => {
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            }, index * 500); // Stagger downloads
+        });
+
+        this.showNotification('Files downloaded individually! 📁', 'success');
+    }
+
+    getFileName(editorKey) {
+        const fileMap = {
+            html: 'index.html',
+            css: 'style.css',
+            js: 'script.js',
+            jsx: 'App.jsx',
+            py: 'main.py'
+        };
+        return fileMap[editorKey] || `${editorKey}.txt`;
+    }
+
     showModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
@@ -499,6 +595,13 @@ function saveProject() {
 function downloadProject() {
     if (window.projectManager) {
         window.projectManager.downloadProject();
+    }
+}
+
+// NEW: Global function for ZIP download
+function downloadProjectAsZip() {
+    if (window.projectManager) {
+        window.projectManager.downloadProjectAsZip();
     }
 }
 
