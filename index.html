@@ -37,11 +37,14 @@
             <!-- Code Panels -->
             <div class="code-panels">
                 <!-- HTML Panel -->
-                <div class="code-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">HTML</span>
+                <div class="code-panel" id="htmlPanel">
+                    <div class="panel-header" onclick="togglePanel('htmlPanel')">
+                        <div class="panel-header-left">
+                            <span class="collapse-icon">▼</span>
+                            <span class="panel-title">HTML</span>
+                        </div>
                         <div class="panel-actions">
-                            <button class="panel-btn" onclick="clearPanel('html')">Clear</button>
+                            <button class="panel-btn" onclick="event.stopPropagation(); clearPanel('html')">Clear</button>
                         </div>
                     </div>
                     <textarea id="htmlCode" class="code-editor" placeholder="<!-- Write your HTML here -->">
@@ -61,11 +64,14 @@
                 </div>
 
                 <!-- CSS Panel -->
-                <div class="code-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">CSS</span>
+                <div class="code-panel" id="cssPanel">
+                    <div class="panel-header" onclick="togglePanel('cssPanel')">
+                        <div class="panel-header-left">
+                            <span class="collapse-icon">▼</span>
+                            <span class="panel-title">CSS</span>
+                        </div>
                         <div class="panel-actions">
-                            <button class="panel-btn" onclick="clearPanel('css')">Clear</button>
+                            <button class="panel-btn" onclick="event.stopPropagation(); clearPanel('css')">Clear</button>
                         </div>
                     </div>
                     <textarea id="cssCode" class="code-editor" placeholder="/* Write your CSS here */">
@@ -78,7 +84,7 @@
 }
 
 h1 {
-    background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(45deg, #6366f1 0%, #7c3aed 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -88,12 +94,12 @@ h1 {
 
 p {
     font-size: 1.2rem;
-    color: #666;
+    color: #8b949e;
     margin-bottom: 2rem;
 }
 
 button {
-    background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(45deg, #6366f1 0%, #7c3aed 100%);
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -109,11 +115,14 @@ button:hover {
                 </div>
 
                 <!-- JavaScript Panel -->
-                <div class="code-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">JavaScript</span>
+                <div class="code-panel" id="jsPanel">
+                    <div class="panel-header" onclick="togglePanel('jsPanel')">
+                        <div class="panel-header-left">
+                            <span class="collapse-icon">▼</span>
+                            <span class="panel-title">JavaScript</span>
+                        </div>
                         <div class="panel-actions">
-                            <button class="panel-btn" onclick="clearPanel('js')">Clear</button>
+                            <button class="panel-btn" onclick="event.stopPropagation(); clearPanel('js')">Clear</button>
                         </div>
                     </div>
                     <textarea id="jsCode" class="code-editor" placeholder="// Write your JavaScript here">
