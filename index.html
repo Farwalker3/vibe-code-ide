@@ -189,21 +189,92 @@
     <script src="scripts/language-support.js"></script>
     
     <script>
-        // Global function for download dropdown
+        // Global dropdown functions - defined immediately for onclick handlers
         function toggleDownloadDropdown() {
+            console.log('Download dropdown clicked');
             const dropdown = document.getElementById('downloadDropdown');
             if (dropdown) {
                 dropdown.classList.toggle('show');
+                console.log('Download dropdown toggled:', dropdown.classList.contains('show'));
+            } else {
+                console.error('Download dropdown not found');
+            }
+        }
+
+        function toggleGitDropdown() {
+            console.log('Git dropdown clicked');
+            const dropdown = document.getElementById('gitDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+                console.log('Git dropdown toggled:', dropdown.classList.contains('show'));
+            } else {
+                console.error('Git dropdown not found');
             }
         }
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', (e) => {
+            console.log('Document clicked, target:', e.target);
+            
+            // Handle download dropdown
             const downloadDropdown = document.getElementById('downloadDropdown');
             const downloadToggle = e.target.closest('[onclick="toggleDownloadDropdown()"]');
             
             if (downloadDropdown && !downloadDropdown.contains(e.target) && !downloadToggle) {
                 downloadDropdown.classList.remove('show');
+                console.log('Download dropdown closed');
+            }
+
+            // Handle git dropdown
+            const gitDropdown = document.getElementById('gitDropdown');
+            const gitToggle = e.target.closest('[onclick="toggleGitDropdown()"]');
+            
+            if (gitDropdown && !gitDropdown.contains(e.target) && !gitToggle) {
+                gitDropdown.classList.remove('show');
+                console.log('Git dropdown closed');
+            }
+        });
+
+        // Debug function to test if buttons are working
+        function debugButtonClick(buttonName) {
+            console.log(`${buttonName} button clicked successfully!`);
+            alert(`${buttonName} button is working!`);
+        }
+
+        // Additional debugging when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, checking elements...');
+            
+            const gitButton = document.querySelector('[onclick="toggleGitDropdown()"]');
+            const downloadButton = document.querySelector('[onclick="toggleDownloadDropdown()"]');
+            const gitDropdown = document.getElementById('gitDropdown');
+            const downloadDropdown = document.getElementById('downloadDropdown');
+            
+            console.log('Git button found:', !!gitButton);
+            console.log('Download button found:', !!downloadButton);
+            console.log('Git dropdown found:', !!gitDropdown);
+            console.log('Download dropdown found:', !!downloadDropdown);
+            
+            if (gitButton) {
+                console.log('Git button element:', gitButton);
+                // Add event listener as backup
+                gitButton.addEventListener('click', function(e) {
+                    console.log('Git button clicked via event listener');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleGitDropdown();
+                });
+            }
+            
+            if (downloadButton) {
+                console.log('Download button element:', downloadButton);
+                // Add event listener as backup
+                downloadButton.addEventListener('click', function(e) {
+                    console.log('Download button clicked via event listener');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleDownloadDropdown();
+                });
             }
         });
     </script>
