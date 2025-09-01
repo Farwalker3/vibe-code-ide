@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Code IDE</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
+    <!-- Emoji-based favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,7 +100,7 @@
                     <div class="panel-actions">
                         <button class="panel-btn" onclick="refreshPreview()">Refresh</button>
                         <button class="panel-btn" onclick="openInNewTab()">Open in New Tab</button>
-                        <button class="panel-btn" onclick="toggleConsole()">Console</button>
+                        <button class="panel-btn" onclick="toggleConsole()" id="consoleToggleBtn">Console</button>
                     </div>
                 </div>
                 <div class="preview-container">
@@ -234,9 +234,9 @@
     <script src="scripts/language-support.js"></script>
     
     <script>
-        // Simple and reliable dropdown functionality
+        // Enhanced dropdown functionality
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Setting up dropdowns...');
+            console.log('🚀 Vibe Code IDE Loading...');
             
             // Get elements
             const downloadBtn = document.getElementById('downloadBtn');
@@ -244,17 +244,11 @@
             const gitBtn = document.getElementById('gitBtn');
             const gitDropdown = document.getElementById('gitDropdown');
             
-            console.log('Download button:', downloadBtn);
-            console.log('Download dropdown:', downloadDropdown);
-            console.log('Git button:', gitBtn);
-            console.log('Git dropdown:', gitDropdown);
-            
             // Download dropdown handler
             if (downloadBtn && downloadDropdown) {
                 downloadBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Download button clicked');
                     
                     // Close git dropdown if open
                     if (gitDropdown) {
@@ -263,7 +257,6 @@
                     
                     // Toggle download dropdown
                     downloadDropdown.classList.toggle('show');
-                    console.log('Download dropdown show state:', downloadDropdown.classList.contains('show'));
                 });
             }
             
@@ -272,7 +265,6 @@
                 gitBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Git button clicked');
                     
                     // Close download dropdown if open
                     if (downloadDropdown) {
@@ -281,24 +273,19 @@
                     
                     // Toggle git dropdown
                     gitDropdown.classList.toggle('show');
-                    console.log('Git dropdown show state:', gitDropdown.classList.contains('show'));
                 });
             }
             
             // Close dropdowns when clicking outside
             document.addEventListener('click', function(e) {
-                console.log('Document click detected');
-                
                 // Check if click is outside download dropdown
                 if (downloadDropdown && !downloadBtn.contains(e.target) && !downloadDropdown.contains(e.target)) {
                     downloadDropdown.classList.remove('show');
-                    console.log('Download dropdown closed');
                 }
                 
                 // Check if click is outside git dropdown
                 if (gitDropdown && !gitBtn.contains(e.target) && !gitDropdown.contains(e.target)) {
                     gitDropdown.classList.remove('show');
-                    console.log('Git dropdown closed');
                 }
             });
             
@@ -316,21 +303,6 @@
             }
         });
         
-        // Global functions for backward compatibility
-        function toggleDownloadDropdown() {
-            const dropdown = document.getElementById('downloadDropdown');
-            if (dropdown) {
-                dropdown.classList.toggle('show');
-            }
-        }
-
-        function toggleGitDropdown() {
-            const dropdown = document.getElementById('gitDropdown');
-            if (dropdown) {
-                dropdown.classList.toggle('show');
-            }
-        }
-
         // Project renaming functionality
         function renameProject() {
             const modal = document.getElementById('renameModal');
@@ -363,6 +335,52 @@
             }
         }
 
+        // Enhanced console functionality
+        function toggleConsole() {
+            const console = document.getElementById('console');
+            const toggleBtn = document.getElementById('consoleToggleBtn');
+            
+            if (console) {
+                const isHidden = console.classList.contains('hidden');
+                
+                if (isHidden) {
+                    // Show console
+                    console.classList.remove('hidden');
+                    console.classList.add('show');
+                    if (toggleBtn) toggleBtn.textContent = 'Hide Console';
+                    
+                    // Initialize console if it's being shown for the first time
+                    initializeConsole();
+                } else {
+                    // Hide console
+                    console.classList.add('hidden');
+                    console.classList.remove('show');
+                    if (toggleBtn) toggleBtn.textContent = 'Console';
+                }
+            }
+        }
+
+        function clearConsole() {
+            const consoleOutput = document.getElementById('consoleOutput');
+            if (consoleOutput) {
+                consoleOutput.innerHTML = '';
+                showNotification('Console cleared! 🧹', 'info');
+            }
+        }
+
+        function initializeConsole() {
+            const consoleOutput = document.getElementById('consoleOutput');
+            if (consoleOutput && consoleOutput.innerHTML.trim() === '') {
+                consoleOutput.innerHTML = `
+                    <div class="console-welcome">
+                        <div class="console-line info">🚀 Vibe Code IDE Console initialized</div>
+                        <div class="console-line info">JavaScript output and errors will appear here</div>
+                        <div class="console-line info">Try running some code to see it in action!</div>
+                    </div>
+                `;
+            }
+        }
+
         // Git connections management
         function manageConnections() {
             if (window.gitIntegration) {
@@ -380,46 +398,135 @@
             }, 100);
         }
 
-        // Console functionality
-        function toggleConsole() {
-            const console = document.getElementById('console');
-            if (console) {
-                console.classList.toggle('hidden');
-                
-                if (!console.classList.contains('hidden')) {
-                    // Initialize console if it's being shown for the first time
-                    initializeConsole();
-                }
-            }
-        }
-
-        function clearConsole() {
-            const consoleOutput = document.getElementById('consoleOutput');
-            if (consoleOutput) {
-                consoleOutput.innerHTML = '';
-            }
-        }
-
-        function initializeConsole() {
-            const consoleOutput = document.getElementById('consoleOutput');
-            if (consoleOutput && consoleOutput.innerHTML.trim() === '') {
-                consoleOutput.innerHTML = '<div class="console-welcome">Console initialized. JavaScript output will appear here.</div>';
-            }
-        }
-
         // Enhanced notification function
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
-            notification.textContent = message;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span class="notification-icon">${getNotificationIcon(type)}</span>
+                    <span class="notification-message">${message}</span>
+                </div>
+            `;
 
             document.body.appendChild(notification);
 
+            // Animate in
+            setTimeout(() => notification.classList.add('show'), 10);
+
+            // Animate out and remove
             setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
+                notification.classList.add('fade-out');
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
+
+        function getNotificationIcon(type) {
+            const icons = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+            return icons[type] || 'ℹ️';
+        }
+
+        // Modal management
+        function closeModal() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.classList.remove('show');
+                modal.classList.add('hidden');
+            });
+        }
+
+        // Initialize console enhancement
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add console styles
+            const consoleStyles = document.createElement('style');
+            consoleStyles.textContent = `
+                .console-panel {
+                    transition: all 0.3s ease;
+                    max-height: 0;
+                    overflow: hidden;
+                }
+                
+                .console-panel.show {
+                    max-height: 300px;
+                    overflow-y: auto;
+                }
+                
+                .console-welcome {
+                    padding: 10px;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 12px;
+                }
+                
+                .console-line {
+                    margin: 5px 0;
+                    padding: 2px 0;
+                }
+                
+                .console-line.info {
+                    color: #6366f1;
+                }
+                
+                .console-line.error {
+                    color: #ef4444;
+                }
+                
+                .console-line.warning {
+                    color: #f59e0b;
+                }
+                
+                .notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: rgba(0, 0, 0, 0.9);
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    transform: translateX(100%);
+                    transition: transform 0.3s ease;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                }
+                
+                .notification.show {
+                    transform: translateX(0);
+                }
+                
+                .notification.fade-out {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+                
+                .notification.success {
+                    background: rgba(34, 197, 94, 0.9);
+                }
+                
+                .notification.error {
+                    background: rgba(239, 68, 68, 0.9);
+                }
+                
+                .notification.warning {
+                    background: rgba(245, 158, 11, 0.9);
+                }
+                
+                .notification-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                
+                .notification-icon {
+                    font-size: 16px;
+                }
+            `;
+            document.head.appendChild(consoleStyles);
+        });
     </script>
 </body>
 </html>
