@@ -6,6 +6,7 @@ class GitIntegration {
         this.connectedRepo = null;
         this.accessToken = null;
         this.platform = null;
+        this.projectId = null; // For GitLab
         this.apiEndpoints = {
             github: 'https://api.github.com',
             gitlab: 'https://gitlab.com/api/v4',
@@ -39,6 +40,7 @@ class GitIntegration {
                 this.connectedRepo = connection.repo;
                 this.accessToken = connection.token;
                 this.platform = connection.platform;
+                this.projectId = connection.projectId;
                 this.updateUIForConnectedState();
             } catch (error) {
                 console.error('Error loading saved Git connection:', error);
@@ -50,7 +52,8 @@ class GitIntegration {
         const connection = {
             repo: this.connectedRepo,
             token: this.accessToken,
-            platform: this.platform
+            platform: this.platform,
+            projectId: this.projectId
         };
         localStorage.setItem('vibeCodeGitConnection', JSON.stringify(connection));
     }
@@ -104,7 +107,7 @@ class GitIntegration {
         // Update help text based on platform
         const helpTexts = {
             github: 'Generate a personal access token from GitHub Settings > Developer Settings > Personal Access Tokens',
-            gitlab: 'Generate a personal access token from GitLab User Settings > Access Tokens',
+            gitlab: 'Generate a personal access token from GitLab User Settings > Access Tokens (needs api, read_repository, write_repository scopes)',
             codeberg: 'Generate a personal access token from Codeberg User Settings > Applications'
         };
 
@@ -150,7 +153,7 @@ class GitIntegration {
         this.platform = platform;
 
         try {
-            // Test the connection
+            // Test the connection and get project info
             await this.testConnection();
             
             this.saveConnection();
@@ -159,23 +162,46 @@ class GitIntegration {
             
             this.showNotification(`Successfully connected to ${this.platform}!`, 'success');
         } catch (error) {
+            console.error('Connection error:', error);
             this.showNotification(`Connection failed: ${error.message}`, 'error');
         }
     }
 
     async testConnection() {
         const [owner, repo] = this.connectedRepo.split('/');
-        const endpoint = this.getApiEndpoint('repos', owner, repo);
         
-        const response = await fetch(endpoint, {
-            headers: this.getAuthHeaders()
-        });
+        if (this.platform === 'gitlab') {
+            // For GitLab, we need to get the project ID first
+            const projectPath = encodeURIComponent(`${owner}/${repo}`);
+            const endpoint = `${this.apiEndpoints.gitlab}/projects/${projectPath}`;
+            
+            const response = await fetch(endpoint, {
+                headers: this.getAuthHeaders()
+            });
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+            }
+
+            const projectData = await response.json();
+            this.projectId = projectData.id;
+            return projectData;
+        } else {
+            // For GitHub and Codeberg
+            const endpoint = this.getApiEndpoint('repos', owner, repo);
+            
+            const response = await fetch(endpoint, {
+                headers: this.getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+            }
+
+            return response.json();
         }
-
-        return response.json();
     }
 
     getApiEndpoint(type, ...params) {
@@ -185,6 +211,10 @@ class GitIntegration {
             case 'github':
                 return `${baseUrl}/${type}/${params.join('/')}`;
             case 'gitlab':
+                // Use project ID if available, otherwise use encoded path
+                if (this.projectId && type === 'files') {
+                    return `${baseUrl}/projects/${this.projectId}/repository/files`;
+                }
                 const projectPath = params.join('/');
                 return `${baseUrl}/projects/${encodeURIComponent(projectPath)}`;
             case 'codeberg':
@@ -199,7 +229,8 @@ class GitIntegration {
             case 'github':
                 return {
                     'Authorization': `token ${this.accessToken}`,
-                    'Accept': 'application/vnd.github.v3+json'
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
                 };
             case 'gitlab':
                 return {
@@ -209,7 +240,8 @@ class GitIntegration {
             case 'codeberg':
                 return {
                     'Authorization': `token ${this.accessToken}`,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 };
             default:
                 return {};
@@ -251,60 +283,101 @@ class GitIntegration {
         const path = this.getFilePath(filename);
         
         try {
-            // First, try to get the file to see if it exists
-            let sha = null;
-            try {
-                const getResponse = await fetch(this.getFileEndpoint(owner, repo, path), {
-                    headers: this.getAuthHeaders()
-                });
-                
-                if (getResponse.ok) {
-                    const fileData = await getResponse.json();
-                    sha = fileData.sha;
-                }
-            } catch (error) {
-                // File doesn't exist, that's okay
+            if (this.platform === 'gitlab') {
+                return await this.handleGitLabFile(path, content);
+            } else {
+                return await this.handleGitHubCodebergFile(owner, repo, path, content);
             }
-
-            // Create or update the file
-            const body = {
-                message: `Update ${filename} from Vibe Code IDE`,
-                content: btoa(unescape(encodeURIComponent(content))), // Base64 encode
-                ...(sha && { sha }) // Include SHA if updating existing file
-            };
-
-            const response = await fetch(this.getFileEndpoint(owner, repo, path), {
-                method: 'PUT',
-                headers: {
-                    ...this.getAuthHeaders(),
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || `HTTP ${response.status}`);
-            }
-
-            return response.json();
         } catch (error) {
             console.error(`Error updating ${filename}:`, error);
             throw error;
         }
     }
 
+    async handleGitLabFile(path, content) {
+        const endpoint = `${this.apiEndpoints.gitlab}/projects/${this.projectId}/repository/files/${encodeURIComponent(path)}`;
+        
+        // First, try to get the file to see if it exists
+        let fileExists = false;
+        try {
+            const getResponse = await fetch(endpoint, {
+                headers: this.getAuthHeaders()
+            });
+            fileExists = getResponse.ok;
+        } catch (error) {
+            // File doesn't exist, that's okay
+        }
+
+        // Create or update the file
+        const body = {
+            branch: 'main',
+            content: content,
+            commit_message: `Update ${path} from Vibe Code IDE`,
+            encoding: 'text'
+        };
+
+        const method = fileExists ? 'PUT' : 'POST';
+        const response = await fetch(endpoint, {
+            method: method,
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+        }
+
+        return response.json();
+    }
+
+    async handleGitHubCodebergFile(owner, repo, path, content) {
+        const endpoint = this.getFileEndpoint(owner, repo, path);
+        
+        // First, try to get the file to see if it exists
+        let sha = null;
+        try {
+            const getResponse = await fetch(endpoint, {
+                headers: this.getAuthHeaders()
+            });
+            
+            if (getResponse.ok) {
+                const fileData = await getResponse.json();
+                sha = fileData.sha;
+            }
+        } catch (error) {
+            // File doesn't exist, that's okay
+        }
+
+        // Create or update the file
+        const body = {
+            message: `Update ${path} from Vibe Code IDE`,
+            content: btoa(unescape(encodeURIComponent(content))), // Base64 encode
+            ...(sha && { sha }) // Include SHA if updating existing file
+        };
+
+        const response = await fetch(endpoint, {
+            method: 'PUT',
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+        }
+
+        return response.json();
+    }
+
     getFileEndpoint(owner, repo, path) {
         switch (this.platform) {
             case 'github':
                 return `${this.apiEndpoints.github}/repos/${owner}/${repo}/contents/${path}`;
-            case 'gitlab':
-                const projectPath = `${owner}/${repo}`;
-                return `${this.apiEndpoints.gitlab}/projects/${encodeURIComponent(projectPath)}/repository/files/${encodeURIComponent(path)}`;
             case 'codeberg':
                 return `${this.apiEndpoints.codeberg}/repos/${owner}/${repo}/contents/${path}`;
             default:
-                throw new Error(`Unsupported platform: ${this.platform}`);
+                throw new Error(`Unsupported platform for file endpoint: ${this.platform}`);
         }
     }
 
@@ -350,6 +423,11 @@ class GitIntegration {
             const [owner, repo] = this.connectedRepo.split('/');
             const files = await this.getRepositoryFiles(owner, repo);
             
+            if (Object.keys(files).length === 0) {
+                this.showNotification('No files found in repository', 'info');
+                return;
+            }
+            
             // Update editors with pulled content
             Object.entries(files).forEach(([filename, content]) => {
                 const editorId = this.getEditorId(filename);
@@ -378,13 +456,31 @@ class GitIntegration {
         
         for (const filename of filesToFetch) {
             try {
-                const response = await fetch(this.getFileEndpoint(owner, repo, filename), {
-                    headers: this.getAuthHeaders()
-                });
+                let content;
                 
-                if (response.ok) {
-                    const fileData = await response.json();
-                    const content = atob(fileData.content); // Decode base64
+                if (this.platform === 'gitlab') {
+                    const endpoint = `${this.apiEndpoints.gitlab}/projects/${this.projectId}/repository/files/${encodeURIComponent(filename)}`;
+                    const response = await fetch(endpoint, {
+                        headers: this.getAuthHeaders()
+                    });
+                    
+                    if (response.ok) {
+                        const fileData = await response.json();
+                        content = atob(fileData.content); // Decode base64
+                    }
+                } else {
+                    const endpoint = this.getFileEndpoint(owner, repo, filename);
+                    const response = await fetch(endpoint, {
+                        headers: this.getAuthHeaders()
+                    });
+                    
+                    if (response.ok) {
+                        const fileData = await response.json();
+                        content = atob(fileData.content); // Decode base64
+                    }
+                }
+                
+                if (content) {
                     files[filename] = content;
                 }
             } catch (error) {
