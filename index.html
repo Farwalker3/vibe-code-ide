@@ -17,7 +17,49 @@
                 <h1 class="logo">🚀 Vibe Code IDE</h1>
                 <span class="tagline">Creative coding in the flow</span>
             </div>
+            <div class="header-center">
+                <div class="project-info">
+                    <span id="projectName">Untitled Project</span>
+                    <select id="projectType" onchange="switchProjectType()">
+                        <option value="web">Web (HTML/CSS/JS)</option>
+                        <option value="react">React</option>
+                        <option value="python">Python</option>
+                        <option value="nodejs">Node.js</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="vue">Vue.js</option>
+                        <option value="angular">Angular</option>
+                        <option value="svelte">Svelte</option>
+                    </select>
+                </div>
+            </div>
             <div class="header-right">
+                <div class="project-controls">
+                    <button class="control-btn" onclick="newProject()" title="New Project">
+                        📄 New
+                    </button>
+                    <button class="control-btn" onclick="openProject()" title="Open Project">
+                        📁 Open
+                    </button>
+                    <button class="control-btn" onclick="saveProject()" title="Save Project">
+                        💾 Save
+                    </button>
+                    <button class="control-btn" onclick="downloadProject()" title="Download Project">
+                        ⬇️ Download
+                    </button>
+                    <div class="dropdown">
+                        <button class="control-btn dropdown-toggle" onclick="toggleGitDropdown()" title="Git Integration">
+                            🔗 Git
+                        </button>
+                        <div class="dropdown-menu" id="gitDropdown">
+                            <button onclick="connectToGitHub()">🐱 Connect GitHub</button>
+                            <button onclick="connectToGitLab()">🦊 Connect GitLab</button>
+                            <button onclick="connectToCodeberg()">🏔️ Connect Codeberg</button>
+                            <hr>
+                            <button onclick="pushToRepo()" id="pushBtn" disabled>📤 Push to Repo</button>
+                            <button onclick="pullFromRepo()" id="pullBtn" disabled>📥 Pull from Repo</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="ai-tools">
                     <a href="https://lovable.dev" target="_blank" class="ai-link lovable">
                         <span class="ai-icon">🤖</span>
@@ -35,116 +77,8 @@
         <!-- Main IDE Area -->
         <main class="ide-main">
             <!-- Code Panels -->
-            <div class="code-panels">
-                <!-- HTML Panel -->
-                <div class="code-panel" id="htmlPanel">
-                    <div class="panel-header" onclick="togglePanel('htmlPanel')">
-                        <div class="panel-header-left">
-                            <span class="collapse-icon">▼</span>
-                            <span class="panel-title">HTML</span>
-                        </div>
-                        <div class="panel-actions">
-                            <button class="panel-btn" onclick="event.stopPropagation(); clearPanel('html')">Clear</button>
-                        </div>
-                    </div>
-                    <textarea id="htmlCode" class="code-editor" placeholder="<!-- Write your HTML here -->">
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My Vibe Project</title>
-</head>
-<body>
-    <div class="container">
-        <h1>Welcome to Vibe Coding! ✨</h1>
-        <p>Start creating something amazing...</p>
-        <button onclick="vibeAlert()">Click for Good Vibes</button>
-    </div>
-</body>
-</html></textarea>
-                </div>
-
-                <!-- CSS Panel -->
-                <div class="code-panel" id="cssPanel">
-                    <div class="panel-header" onclick="togglePanel('cssPanel')">
-                        <div class="panel-header-left">
-                            <span class="collapse-icon">▼</span>
-                            <span class="panel-title">CSS</span>
-                        </div>
-                        <div class="panel-actions">
-                            <button class="panel-btn" onclick="event.stopPropagation(); clearPanel('css')">Clear</button>
-                        </div>
-                    </div>
-                    <textarea id="cssCode" class="code-editor" placeholder="/* Write your CSS here */">
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
-    font-family: 'Inter', sans-serif;
-}
-
-h1 {
-    background: linear-gradient(45deg, #6366f1 0%, #7c3aed 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-p {
-    font-size: 1.2rem;
-    color: #8b949e;
-    margin-bottom: 2rem;
-}
-
-button {
-    background: linear-gradient(45deg, #6366f1 0%, #7c3aed 100%);
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 50px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-button:hover {
-    transform: translateY(-2px);
-}</textarea>
-                </div>
-
-                <!-- JavaScript Panel -->
-                <div class="code-panel" id="jsPanel">
-                    <div class="panel-header" onclick="togglePanel('jsPanel')">
-                        <div class="panel-header-left">
-                            <span class="collapse-icon">▼</span>
-                            <span class="panel-title">JavaScript</span>
-                        </div>
-                        <div class="panel-actions">
-                            <button class="panel-btn" onclick="event.stopPropagation(); clearPanel('js')">Clear</button>
-                        </div>
-                    </div>
-                    <textarea id="jsCode" class="code-editor" placeholder="// Write your JavaScript here">
-function vibeAlert() {
-    const messages = [
-        "You're coding with great vibes! 🌟",
-        "Keep that creative energy flowing! ⚡",
-        "Your code is looking fantastic! 🚀",
-        "Vibe coding at its finest! ✨",
-        "You're in the zone! 🎯"
-    ];
-    
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    alert(randomMessage);
-}
-
-// Add some interactive elements
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Vibe Code IDE loaded successfully!');
-    console.log('Ready to create something amazing!');
-});</textarea>
-                </div>
+            <div class="code-panels" id="codePanels">
+                <!-- Dynamic panels will be inserted here based on project type -->
             </div>
 
             <!-- Live Preview -->
@@ -154,13 +88,95 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="panel-actions">
                         <button class="panel-btn" onclick="refreshPreview()">Refresh</button>
                         <button class="panel-btn" onclick="openInNewTab()">Open in New Tab</button>
+                        <button class="panel-btn" onclick="toggleConsole()">Console</button>
                     </div>
                 </div>
-                <iframe id="preview" class="preview-frame"></iframe>
+                <div class="preview-container">
+                    <iframe id="preview" class="preview-frame"></iframe>
+                    <div id="console" class="console-panel hidden">
+                        <div class="console-header">
+                            <span>Console Output</span>
+                            <button onclick="clearConsole()">Clear</button>
+                        </div>
+                        <div id="consoleOutput" class="console-output"></div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
+    <!-- Modals -->
+    <div id="projectModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">New Project</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="projectNameInput">Project Name:</label>
+                    <input type="text" id="projectNameInput" placeholder="My Awesome Project">
+                </div>
+                <div class="form-group">
+                    <label for="projectTypeModal">Project Type:</label>
+                    <select id="projectTypeModal">
+                        <option value="web">Web (HTML/CSS/JS)</option>
+                        <option value="react">React</option>
+                        <option value="python">Python</option>
+                        <option value="nodejs">Node.js</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="vue">Vue.js</option>
+                        <option value="angular">Angular</option>
+                        <option value="svelte">Svelte</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="projectDescription">Description (optional):</label>
+                    <textarea id="projectDescription" placeholder="Describe your project..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createProject()">Create Project</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gitModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="gitModalTitle">Connect to Repository</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="gitPlatform">Platform:</label>
+                    <select id="gitPlatform" onchange="updateGitForm()">
+                        <option value="github">GitHub</option>
+                        <option value="gitlab">GitLab</option>
+                        <option value="codeberg">Codeberg</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="gitToken">Access Token:</label>
+                    <input type="password" id="gitToken" placeholder="Your access token">
+                    <small class="help-text">Generate a personal access token from your platform settings</small>
+                </div>
+                <div class="form-group">
+                    <label for="gitRepo">Repository URL:</label>
+                    <input type="text" id="gitRepo" placeholder="https://github.com/username/repo">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="connectGitRepo()">Connect</button>
+            </div>
+        </div>
+    </div>
+
     <script src="scripts/main.js"></script>
+    <script src="scripts/project-manager.js"></script>
+    <script src="scripts/git-integration.js"></script>
+    <script src="scripts/language-support.js"></script>
 </body>
 </html>
