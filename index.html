@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- JSZip library for ZIP file creation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
     <div class="ide-container">
@@ -43,9 +46,15 @@
                     <button class="control-btn" onclick="saveProject()" title="Save Project">
                         💾 Save
                     </button>
-                    <button class="control-btn" onclick="downloadProject()" title="Download Project">
-                        ⬇️ Download
-                    </button>
+                    <div class="dropdown">
+                        <button class="control-btn dropdown-toggle" onclick="toggleDownloadDropdown()" title="Download Options">
+                            ⬇️ Download
+                        </button>
+                        <div class="dropdown-menu" id="downloadDropdown">
+                            <button onclick="downloadProject()">📄 Download as JSON</button>
+                            <button onclick="downloadProjectAsZip()">📦 Download as ZIP</button>
+                        </div>
+                    </div>
                     <div class="dropdown">
                         <button class="control-btn dropdown-toggle" onclick="toggleGitDropdown()" title="Git Integration">
                             🔗 Git
@@ -178,5 +187,25 @@
     <script src="scripts/project-manager.js"></script>
     <script src="scripts/git-integration.js"></script>
     <script src="scripts/language-support.js"></script>
+    
+    <script>
+        // Global function for download dropdown
+        function toggleDownloadDropdown() {
+            const dropdown = document.getElementById('downloadDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            const downloadDropdown = document.getElementById('downloadDropdown');
+            const downloadToggle = e.target.closest('[onclick="toggleDownloadDropdown()"]');
+            
+            if (downloadDropdown && !downloadDropdown.contains(e.target) && !downloadToggle) {
+                downloadDropdown.classList.remove('show');
+            }
+        });
+    </script>
 </body>
 </html>
