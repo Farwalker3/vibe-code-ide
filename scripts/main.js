@@ -15,6 +15,7 @@ class VibeCodeIDE {
             this.setupEditors();
             this.addEventListeners();
             this.updatePreview();
+            this.setupResponsiveHandlers();
             
             // Welcome message
             console.log('🚀 Welcome to Vibe Code IDE!');
@@ -30,6 +31,59 @@ class VibeCodeIDE {
             this.editors[editorId] = editor;
         });
     }
+
+    setupResponsiveHandlers() {
+        // Handle window resize for responsive layout
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.handleResponsiveLayout();
+            }, 150);
+        });
+
+        // Initial responsive setup
+        this.handleResponsiveLayout();
+    }
+
+    handleResponsiveLayout() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        // Auto-collapse panels on very small screens
+        if (width < 480 && height < 600) {
+            this.autoCollapsePanels();
+        }
+        
+        // Adjust font sizes for better readability
+        this.adjustFontSizes();
+    }
+
+    autoCollapsePanels() {
+        const panels = document.querySelectorAll('.code-panel');
+        panels.forEach((panel, index) => {
+            // Keep only the first panel expanded on very small screens
+            if (index > 0 && !panel.classList.contains('collapsed')) {
+                const panelId = panel.id;
+                togglePanel(panelId);
+            }
+        });
+    }
+
+    adjustFontSizes() {
+        const width = window.innerWidth;
+        const editors = document.querySelectorAll('.code-editor');
+        
+        editors.forEach(editor => {
+            if (width < 480) {
+                editor.style.fontSize = '12px';
+            } else if (width < 768) {
+                editor.style.fontSize = '13px';
+            } else {
+                editor.style.fontSize = '14px';
+            }
+        });
+    }
     
     addEventListeners() {
         // Auto-update preview on code change (with debouncing)
@@ -42,6 +96,13 @@ class VibeCodeIDE {
         // Add event listeners to all current editors
         Object.values(this.editors).forEach(editor => {
             editor.addEventListener('input', debouncedUpdate);
+            
+            // Add mobile-friendly touch events
+            if ('ontouchstart' in window) {
+                editor.addEventListener('touchstart', () => {
+                    editor.focus();
+                });
+            }
         });
 
         // Manual run button
@@ -57,7 +118,7 @@ class VibeCodeIDE {
                 this.updatePreview();
             }
             
-            // Ctrl/Cmd + S to save (placeholder)
+            // Ctrl/Cmd + S to save
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
                 if (window.projectManager) {
@@ -66,9 +127,14 @@ class VibeCodeIDE {
                     this.saveProject();
                 }
             }
+
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                this.closeAllModals();
+            }
         });
         
-        // Tab key support in textareas
+        // Enhanced tab key support in textareas
         Object.values(this.editors).forEach(editor => {
             editor.addEventListener('keydown', (e) => {
                 if (e.key === 'Tab') {
@@ -76,11 +142,50 @@ class VibeCodeIDE {
                     const start = editor.selectionStart;
                     const end = editor.selectionEnd;
                     
-                    // Insert tab character
-                    editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
-                    editor.selectionStart = editor.selectionEnd = start + 2;
+                    if (e.shiftKey) {
+                        // Shift+Tab: Remove indentation
+                        const lines = editor.value.split('\n');
+                        const startLine = editor.value.substring(0, start).split('\n').length - 1;
+                        const endLine = editor.value.substring(0, end).split('\n').length - 1;
+                        
+                        for (let i = startLine; i <= endLine; i++) {
+                            if (lines[i].startsWith('  ')) {
+                                lines[i] = lines[i].substring(2);
+                            }
+                        }
+                        
+                        editor.value = lines.join('\n');
+                        editor.setSelectionRange(Math.max(0, start - 2), Math.max(0, end - 2));
+                    } else {
+                        // Tab: Add indentation
+                        if (start === end) {
+                            // Single cursor
+                            editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+                            editor.selectionStart = editor.selectionEnd = start + 2;
+                        } else {
+                            // Selection: indent all lines
+                            const lines = editor.value.split('\n');
+                            const startLine = editor.value.substring(0, start).split('\n').length - 1;
+                            const endLine = editor.value.substring(0, end).split('\n').length - 1;
+                            
+                            for (let i = startLine; i <= endLine; i++) {
+                                lines[i] = '  ' + lines[i];
+                            }
+                            
+                            editor.value = lines.join('\n');
+                            editor.setSelectionRange(start + 2, end + (endLine - startLine + 1) * 2);
+                        }
+                    }
                 }
             });
+        });
+    }
+
+    closeAllModals() {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.classList.remove('show');
+            modal.classList.add('hidden');
         });
     }
 
@@ -118,29 +223,48 @@ class VibeCodeIDE {
                         margin: 0;
                         padding: 20px;
                         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                        line-height: 1.6;
                     }
+                    
+                    /* Responsive defaults */
+                    * {
+                        box-sizing: border-box;
+                    }
+                    
+                    img {
+                        max-width: 100%;
+                        height: auto;
+                    }
+                    
                     ${css}
                 </style>
             </head>
             <body>
                 ${html}
                 <script>
-                    // Error handling for user code
+                    // Enhanced error handling for user code
                     window.addEventListener('error', function(e) {
                         console.error('Preview Error:', e.error);
                         const errorDiv = document.createElement('div');
-                        errorDiv.style.cssText = 'background: #fee; border: 1px solid #fcc; padding: 10px; margin: 10px 0; border-radius: 4px; color: #c33; font-family: monospace;';
-                        errorDiv.innerHTML = '<strong>JavaScript Error:</strong> ' + e.message;
+                        errorDiv.style.cssText = 'background: #fee; border: 1px solid #fcc; padding: 10px; margin: 10px 0; border-radius: 4px; color: #c33; font-family: monospace; font-size: 14px; line-height: 1.4;';
+                        errorDiv.innerHTML = '<strong>JavaScript Error:</strong><br>' + e.message + '<br><small>Line: ' + e.lineno + '</small>';
                         document.body.appendChild(errorDiv);
                     });
+                    
+                    // Console override for better debugging
+                    const originalLog = console.log;
+                    console.log = function(...args) {
+                        originalLog.apply(console, args);
+                        // Could send to parent frame for console panel
+                    };
                     
                     try {
                         ${js}
                     } catch (error) {
                         console.error('JavaScript Error:', error);
                         const errorDiv = document.createElement('div');
-                        errorDiv.style.cssText = 'background: #fee; border: 1px solid #fcc; padding: 10px; margin: 10px 0; border-radius: 4px; color: #c33; font-family: monospace;';
-                        errorDiv.innerHTML = '<strong>JavaScript Error:</strong> ' + error.message;
+                        errorDiv.style.cssText = 'background: #fee; border: 1px solid #fcc; padding: 10px; margin: 10px 0; border-radius: 4px; color: #c33; font-family: monospace; font-size: 14px; line-height: 1.4;';
+                        errorDiv.innerHTML = '<strong>JavaScript Error:</strong><br>' + error.message + '<br><small>' + error.stack + '</small>';
                         document.body.appendChild(errorDiv);
                     }
                 </script>
@@ -158,7 +282,7 @@ class VibeCodeIDE {
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
         
-        // Add visual feedback
+        // Add visual feedback with better mobile support
         if (this.runBtn) {
             this.runBtn.textContent = '✓ Updated';
             this.runBtn.style.background = 'linear-gradient(45deg, #22c55e, #16a34a)';
@@ -212,19 +336,6 @@ class VibeCodeIDE {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#3b82f6'};
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            z-index: 1000;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            animation: slideIn 0.3s ease;
-        `;
         
         document.body.appendChild(notification);
         
@@ -235,7 +346,7 @@ class VibeCodeIDE {
     }
 }
 
-// Panel collapse/expand functionality - FIXED to remove extra space
+// ENHANCED Panel collapse/expand functionality - COMPLETELY FIXED
 function togglePanel(panelId) {
     const panel = document.getElementById(panelId);
     if (!panel) return;
@@ -248,31 +359,55 @@ function togglePanel(panelId) {
         panel.classList.remove('collapsed');
         if (collapseIcon) collapseIcon.textContent = '▼';
         
-        // Restore editor visibility and functionality
+        // Restore editor completely
         if (codeEditor) {
+            // Remove all inline styles that were hiding the editor
             codeEditor.style.height = '';
             codeEditor.style.minHeight = '';
+            codeEditor.style.maxHeight = '';
             codeEditor.style.padding = '';
             codeEditor.style.margin = '';
+            codeEditor.style.border = '';
             codeEditor.style.opacity = '';
             codeEditor.style.visibility = '';
             codeEditor.style.overflow = '';
+            codeEditor.style.flex = '';
         }
     } else {
-        // Collapse panel
+        // Collapse panel - COMPLETELY hide editor
         panel.classList.add('collapsed');
         if (collapseIcon) collapseIcon.textContent = '▶';
         
-        // Hide editor completely to remove space
+        // Force hide editor with !important-like behavior through inline styles
         if (codeEditor) {
-            codeEditor.style.height = '0';
-            codeEditor.style.minHeight = '0';
-            codeEditor.style.padding = '0';
-            codeEditor.style.margin = '0';
+            codeEditor.style.height = '0px';
+            codeEditor.style.minHeight = '0px';
+            codeEditor.style.maxHeight = '0px';
+            codeEditor.style.padding = '0px';
+            codeEditor.style.margin = '0px';
+            codeEditor.style.border = 'none';
             codeEditor.style.opacity = '0';
             codeEditor.style.visibility = 'hidden';
             codeEditor.style.overflow = 'hidden';
+            codeEditor.style.flex = '0 0 0px';
         }
+    }
+    
+    // Announce change for screen readers
+    const title = panel.querySelector('.panel-title');
+    if (title) {
+        const isCollapsed = panel.classList.contains('collapsed');
+        panel.setAttribute('aria-expanded', !isCollapsed);
+        
+        // Optional: announce to screen readers
+        const announcement = document.createElement('div');
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.setAttribute('aria-atomic', 'true');
+        announcement.style.position = 'absolute';
+        announcement.style.left = '-10000px';
+        announcement.textContent = `${title.textContent} panel ${isCollapsed ? 'collapsed' : 'expanded'}`;
+        document.body.appendChild(announcement);
+        setTimeout(() => announcement.remove(), 1000);
     }
 }
 
@@ -282,9 +417,11 @@ function clearPanel(type) {
     const editor = document.getElementById(editorId);
     
     if (editor) {
-        editor.value = '';
-        if (window.ide) {
-            window.ide.updatePreview();
+        if (confirm('Are you sure you want to clear this panel? This action cannot be undone.')) {
+            editor.value = '';
+            if (window.ide) {
+                window.ide.updatePreview();
+            }
         }
     }
 }
@@ -311,7 +448,17 @@ function openInNewTab() {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Vibe Code Project</title>
-            <style>${css}</style>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 20px;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    line-height: 1.6;
+                }
+                * { box-sizing: border-box; }
+                img { max-width: 100%; height: auto; }
+                ${css}
+            </style>
         </head>
         <body>
             ${html}
@@ -328,7 +475,35 @@ function openInNewTab() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// Add CSS animations
+// Touch and mobile improvements
+function setupMobileEnhancements() {
+    // Prevent zoom on double tap for buttons
+    const buttons = document.querySelectorAll('button, .panel-header');
+    buttons.forEach(button => {
+        button.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.target.click();
+        });
+    });
+
+    // Improve touch scrolling
+    const scrollableElements = document.querySelectorAll('.code-editor, .console-output');
+    scrollableElements.forEach(element => {
+        element.style.webkitOverflowScrolling = 'touch';
+    });
+
+    // Add haptic feedback on supported devices
+    if ('vibrate' in navigator) {
+        const tactileElements = document.querySelectorAll('.run-btn, .control-btn');
+        tactileElements.forEach(element => {
+            element.addEventListener('click', () => {
+                navigator.vibrate(50);
+            });
+        });
+    }
+}
+
+// Add CSS animations and enhancements
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
@@ -359,6 +534,23 @@ style.textContent = `
     .number {
         color: #bd93f9;
     }
+
+    /* Smooth transitions for panel collapse */
+    .code-panel {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Better focus indicators for accessibility */
+    .code-editor:focus-visible {
+        outline: 2px solid #6366f1;
+        outline-offset: -2px;
+    }
+
+    /* Loading state */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
 `;
 document.head.appendChild(style);
 
@@ -370,6 +562,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ide = new VibeCodeIDE();
         window.ide = ide; // Make it globally accessible
         
+        // Setup mobile enhancements
+        setupMobileEnhancements();
+        
         // Try to load saved project
         if (localStorage.getItem('vibeCodeProject') && !window.projectManager) {
             setTimeout(() => {
@@ -380,6 +575,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 300);
 });
+
+// Service Worker registration for PWA capabilities (optional)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        // Could register a service worker here for offline functionality
+    });
+}
 
 // Export for potential use in other scripts
 if (typeof module !== 'undefined' && module.exports) {
