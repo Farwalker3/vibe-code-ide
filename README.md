@@ -2,6 +2,9 @@
 
 A modern, web-based IDE designed for creative coding with HTML5, CSS, and JavaScript. Features live preview and seamless integration with AI coding services.
 
+## 🌐 **Live Demo**
+Try it now: **https://farwalker3.github.io/vibe-code-ide/**
+
 ## ✨ Features
 
 - **Multi-language Support**: HTML5, CSS3, JavaScript
