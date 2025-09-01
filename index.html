@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Code IDE</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +23,7 @@
             </div>
             <div class="header-center">
                 <div class="project-info">
-                    <span id="projectName">Untitled Project</span>
+                    <span id="projectName" onclick="renameProject()" title="Click to rename project">Untitled Project</span>
                     <select id="projectType" onchange="switchProjectType()">
                         <option value="web">Web (HTML/CSS/JS)</option>
                         <option value="react">React</option>
@@ -64,6 +65,7 @@
                             <button onclick="connectToGitLab()">🦊 Connect GitLab</button>
                             <button onclick="connectToCodeberg()">🏔️ Connect Codeberg</button>
                             <hr>
+                            <button onclick="manageConnections()" id="manageBtn">⚙️ Manage Connections</button>
                             <button onclick="pushToRepo()" id="pushBtn" disabled>📤 Push to Repo</button>
                             <button onclick="pullFromRepo()" id="pullBtn" disabled>📥 Pull from Repo</button>
                         </div>
@@ -175,10 +177,52 @@
                     <label for="gitRepo">Repository URL:</label>
                     <input type="text" id="gitRepo" placeholder="https://github.com/username/repo">
                 </div>
+                <div class="form-group">
+                    <label for="connectionName">Connection Name (optional):</label>
+                    <input type="text" id="connectionName" placeholder="My GitHub Repo">
+                    <small class="help-text">Give this connection a memorable name</small>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="connectGitRepo()">Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="connectionsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Manage Git Connections</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="connectionsList">
+                    <!-- Connections will be populated here -->
+                </div>
+                <button class="btn btn-primary" onclick="addNewConnection()">Add New Connection</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="renameModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Rename Project</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newProjectName">New Project Name:</label>
+                    <input type="text" id="newProjectName" placeholder="Enter new project name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmRename()">Rename</button>
             </div>
         </div>
     </div>
@@ -284,6 +328,96 @@
             if (dropdown) {
                 dropdown.classList.toggle('show');
             }
+        }
+
+        // Project renaming functionality
+        function renameProject() {
+            const modal = document.getElementById('renameModal');
+            const input = document.getElementById('newProjectName');
+            const currentName = document.getElementById('projectName').textContent;
+            
+            if (modal && input) {
+                input.value = currentName;
+                modal.classList.remove('hidden');
+                modal.classList.add('show');
+                setTimeout(() => input.focus(), 100);
+            }
+        }
+
+        function confirmRename() {
+            const input = document.getElementById('newProjectName');
+            const projectNameSpan = document.getElementById('projectName');
+            
+            if (input && projectNameSpan && input.value.trim()) {
+                projectNameSpan.textContent = input.value.trim();
+                
+                // Update project manager if available
+                if (window.projectManager) {
+                    window.projectManager.currentProject.name = input.value.trim();
+                    window.projectManager.saveProject();
+                }
+                
+                closeModal();
+                showNotification('Project renamed successfully! ✏️', 'success');
+            }
+        }
+
+        // Git connections management
+        function manageConnections() {
+            if (window.gitIntegration) {
+                window.gitIntegration.showConnectionsManager();
+            }
+        }
+
+        function addNewConnection() {
+            closeModal();
+            // Open git connection modal
+            setTimeout(() => {
+                if (window.gitIntegration) {
+                    window.gitIntegration.connectToGitHub();
+                }
+            }, 100);
+        }
+
+        // Console functionality
+        function toggleConsole() {
+            const console = document.getElementById('console');
+            if (console) {
+                console.classList.toggle('hidden');
+                
+                if (!console.classList.contains('hidden')) {
+                    // Initialize console if it's being shown for the first time
+                    initializeConsole();
+                }
+            }
+        }
+
+        function clearConsole() {
+            const consoleOutput = document.getElementById('consoleOutput');
+            if (consoleOutput) {
+                consoleOutput.innerHTML = '';
+            }
+        }
+
+        function initializeConsole() {
+            const consoleOutput = document.getElementById('consoleOutput');
+            if (consoleOutput && consoleOutput.innerHTML.trim() === '') {
+                consoleOutput.innerHTML = '<div class="console-welcome">Console initialized. JavaScript output will appear here.</div>';
+            }
+        }
+
+        // Enhanced notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
     </script>
 </body>
