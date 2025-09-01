@@ -58,6 +58,8 @@ body {
     flex-wrap: wrap;
     gap: 0.5rem;
     min-height: 60px;
+    position: relative;
+    z-index: 100;
 }
 
 .header-left {
@@ -145,6 +147,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    position: relative;
 }
 
 .control-btn:hover {
@@ -153,9 +156,10 @@ body {
     transform: translateY(-1px);
 }
 
-/* Dropdown Styles - Improved */
+/* FIXED: Dropdown Styles - Enhanced visibility and z-index */
 .dropdown {
     position: relative;
+    display: inline-block;
 }
 
 .dropdown-menu {
@@ -167,18 +171,20 @@ body {
     border-radius: 8px;
     padding: 0.5rem 0;
     min-width: 220px;
-    z-index: 1000;
+    z-index: 9999 !important;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: all 0.2s ease;
-    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
 }
 
 .dropdown-menu.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
 }
 
 .dropdown-menu button {
@@ -272,6 +278,8 @@ body {
     background: var(--border-color);
     overflow: hidden;
     min-height: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .code-panels {
@@ -327,6 +335,8 @@ body {
     user-select: none;
     transition: background-color 0.2s ease;
     min-height: 48px;
+    position: relative;
+    z-index: 2;
 }
 
 .panel-header:hover {
@@ -464,7 +474,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 10000;
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
@@ -626,6 +636,11 @@ body {
     .project-info span {
         max-width: 120px;
     }
+
+    .dropdown-menu {
+        right: auto;
+        left: 0;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -719,6 +734,12 @@ body {
     
     .btn {
         width: 100%;
+    }
+
+    .dropdown-menu {
+        right: 0;
+        left: auto;
+        min-width: 200px;
     }
 }
 
@@ -838,7 +859,7 @@ body {
     right: 20px;
     padding: 12px 20px;
     border-radius: 8px;
-    z-index: 3000;
+    z-index: 11000;
     font-weight: 500;
     box-shadow: var(--shadow-lg);
     animation: slideIn 0.3s ease;
